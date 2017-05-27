@@ -1,0 +1,168 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-sorter.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid-filter.html">
+
+<dom-module id="recipes-list-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        padding: 10px;
+      }
+
+      paper-button {
+        margin-bottom: 10px;
+      }
+    </style>
+    <paper-button raised="" on-tap="_add">Добавить рецепт</paper-button>
+    <paper-button raised="" on-tap="_remove">Удалить рецепт</paper-button>
+
+    <vaadin-grid items="[[recipes]]" active-item="{{activeItem}}" id="recipeGrid">
+
+      <vaadin-grid-column width="25px" flex-grow="0">
+      <template class="header">#</template>
+      <template>[[index]]</template>
+    </vaadin-grid-column>
+
+      <vaadin-grid-column>
+        <template class="header">Название</template>
+        <template>[[item.name]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column width="100px">
+        <template class="header">
+          <vaadin-grid-sorter path="category">Категория</vaadin-grid-sorter>
+        </template>
+        <template>[[item.category]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column>
+        <template class="header">
+          <vaadin-grid-sorter path="rate">Оценка</vaadin-grid-sorter>
+        </template>
+        <template>[[item.rate]]</template>
+      </vaadin-grid-column>
+
+      <vaadin-grid-column>
+        <template class="header">
+          <vaadin-grid-filter aria-label="Описание" path="description" value="[[_filterDescription]]">
+            <input placeholder="Описание" value="{{_filterDescription::input}}" focus-target="">
+          </vaadin-grid-filter>
+        </template>
+        <template>[[item.description]]</template>
+      </vaadin-grid-column>
+
+    </vaadin-grid>
+  </template>
+
+  <script>
+    Polymer({
+        is: 'recipes-list-view',
+
+        properties: {
+            route: {
+                type: String,
+                notify: true
+            },
+            dbName: {
+                type: String,
+                value: 'CooBookBase'
+            },
+            storeName: {
+                type: String,
+                value: 'CooBookRecipeObjectStore'
+            },
+            indexedDB: Object,
+            recipes: {
+                type: Array,
+                value: []
+            },
+            activeItem: {
+                observer: '_activeItemChanged'
+            }
+        },
+
+        ready() {
+            if (!this.indexedDB) this.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+            this._connectDB(this._getRecipes);
+        },
+
+        _connectDB(f, arg){
+            let self = this;
+            let request = this.indexedDB.open(this.dbName, 1);
+            request.onerror = (err) => {
+                console.log(err);
+            };
+            request.onsuccess = () => {
+                f.call(self, request.result, arg);
+            };
+            request.onupgradeneeded = (e) => {
+                e.currentTarget.result.createObjectStore('CooBookRecipeObjectStore', {autoIncrement : true});
+                e.currentTarget.result.createObjectStore('CooBookIngredientsObjectStore', {autoIncrement : true});
+                e.currentTarget.result.createObjectStore('CooBookPhotoObjectStore', {autoIncrement : true});
+                self._connectDB(f);
+            };
+        },
+
+        _getRecipes(db) {
+            let self = this;
+            let objectStore = db.transaction([this.storeName], "readonly").objectStore(this.storeName);
+
+            objectStore.openCursor().onsuccess = (event) => {
+                let cursor = event.target.result;
+                if (cursor) {
+                    let recipe = cursor.value;
+                    recipe.id = cursor.key;
+                    self.push('recipes', recipe);
+                    cursor.continue();
+                }
+            };
+        },
+
+        _add: function () {
+            this.set('route.path', '/recipe-create-view');
+        },
+
+        _remove: function () {
+            if (this.activeItem) {
+                this._connectDB(this._removeRecipeCallBack, this.activeItem);
+            }
+        },
+
+        _removeRecipeCallBack(db, activeItem) {
+            let self = this;
+            let store = db.transaction([this.storeName], "readwrite").objectStore(this.storeName);
+            let request = store.delete(activeItem.id);
+
+            request.onsuccess = () => {
+                let index = self._indexOf(self.recipes, activeItem.name);
+
+                if (index > -1) {
+                    self.splice('recipes', index, 1);
+                }
+            };
+
+            request.onerror = (err) => {
+                console.log(err);
+            };
+        },
+
+        _activeItemChanged: function(item) {
+            this.$.recipeGrid.selectedItems = item ? [item] : [];
+        },
+
+        _indexOf(arr, name) {
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].name === name) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    });
+  </script>
+</dom-module>

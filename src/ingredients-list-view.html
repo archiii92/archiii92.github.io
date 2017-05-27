@@ -1,0 +1,168 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<link rel="import" href="../bower_components/neon-animation/web-animations.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/web-animations-js/web-animations-next-lite.min.js">
+
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/vaadin-grid/vaadin-grid.html">
+
+<dom-module id="ingredients-list-view">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+
+        padding: 10px;
+      }
+    </style>
+
+    <paper-button raised="" on-tap="_add">Добавить ингредиент</paper-button>
+    <paper-button raised="" on-tap="_remove">Удалить ингредиент</paper-button>
+
+    <vaadin-grid items="[[ingredients]]" active-item="{{selectedIngredient}}" id="grid">
+      <vaadin-grid-column>
+        <template class="header">Название</template>
+        <template>[[item.name]]</template>
+      </vaadin-grid-column>
+    </vaadin-grid>
+
+      <paper-dialog entry-animation="scale-up-animation" exit-animation="fade-out-animation" with-backdrop="true" id="ingredientDialog">
+          <h2>Добавление нового ингредиента</h2>
+          <paper-input label="Введите название ингредиента" type="text" id="ingredientName"></paper-input>
+          <div class="buttons">
+              <paper-button dialog-dismiss="" on-tap="_addIngredient">Добавить</paper-button>
+              <paper-button dialog-confirm="" autofocus="">Отмена</paper-button>
+          </div>
+      </paper-dialog>
+  </template>
+
+  <script>
+    Polymer({
+        is: 'ingredients-list-view',
+
+        properties: {
+            dbName: {
+                type: String,
+                value: 'CooBookBase'
+            },
+            storeName: {
+                type: String,
+                value: 'CooBookIngredientsObjectStore'
+            },
+            ingredients: {
+                type: Array,
+                value: []
+            },
+            selectedIngredient: {
+                observer: '_activeItemChanged'
+            }
+        },
+
+        ready() {
+            if (!this.indexedDB) this.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+            this._connectDB(this._getIngredients);
+        },
+
+        _connectDB(f, arg){
+            let self = this;
+            let request = this.indexedDB.open(this.dbName, 1);
+            request.onerror = (err) => {
+                console.log(err);
+            };
+            request.onsuccess = () => {
+                f.call(self, request.result, arg);
+            };
+            request.onupgradeneeded = (e) => {
+                e.currentTarget.result.createObjectStore('CooBookRecipeObjectStore', {autoIncrement : true});
+                e.currentTarget.result.createObjectStore('CooBookIngredientsObjectStore', {autoIncrement : true});
+                e.currentTarget.result.createObjectStore('CooBookPhotoObjectStore', {autoIncrement : true});
+                self._connectDB(f);
+            };
+        },
+
+        _getIngredients(db) {
+            let self = this;
+            let objectStore = db.transaction([this.storeName], "readonly").objectStore(this.storeName);
+
+            objectStore.openCursor().onsuccess = (event) => {
+                let cursor = event.target.result;
+                if (cursor) {
+                    let ingredient = cursor.value;
+                    ingredient.id = cursor.key;
+                    self.push('ingredients', ingredient);
+                    cursor.continue();
+                }
+            };
+        },
+
+        _addIngredient(){
+            let newIngredient = {name: this.$.ingredientName.value};
+            this._connectDB(this._addIngredientCallBack, newIngredient);
+        },
+
+        _addIngredientCallBack(db, newIngredient) {
+            let self = this;
+            let store = db.transaction([this.storeName], "readwrite").objectStore(this.storeName);
+            let request = store.add(newIngredient);
+
+            request.onsuccess = (e) => {
+                newIngredient.id = e.target.result;
+                self.push('ingredients', newIngredient)
+            };
+
+            request.onerror = (err) => {
+                console.log(err);
+            };
+        },
+
+        _add: function () {
+            Polymer.dom(document.querySelector('body')).appendChild(this.$.ingredientDialog);
+            this.$.ingredientName.value = '';
+            this.$.ingredientDialog.open();
+        },
+
+        _remove: function () {
+
+            if (this.selectedIngredient) {
+                this._connectDB(this._removeIngredientCallBack, this.selectedIngredient);
+            }
+        },
+
+        _removeIngredientCallBack(db, selectedIngredient) {
+            let self = this;
+            let store = db.transaction([this.storeName], "readwrite").objectStore(this.storeName);
+            let request = store.delete(selectedIngredient.id);
+
+            request.onsuccess = () => {
+                let index = self._indexOf(self.ingredients, selectedIngredient.name);
+
+                if (index > -1) {
+                    self.splice('ingredients', index, 1);
+                }
+            };
+
+            request.onerror = (err) => {
+                console.log(err);
+            };
+        },
+
+        _activeItemChanged: function (item) {
+            this.$.grid.selectedItems = item ? [item] : [];
+        },
+
+        _indexOf(arr, name) {
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].name === name) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    });
+  </script>
+</dom-module>
