@@ -8,15 +8,15 @@ p {
 }
 
 a {
-  color: #88adff;
+  color: #568bff;
 }
 
 a:hover {
-  color: #558aff;
+  color: #2368ff;
 }
 
 .text-primary {
-  color: #88adff !important;
+  color: #568bff !important;
 }
 
 h1,
@@ -65,13 +65,13 @@ section h3.section-subheading {
 }
 
 .btn-primary {
-  background-color: #88adff;
-  border-color: #88adff;
+  background-color: #568bff;
+  border-color: #568bff;
 }
 
 .btn-primary:active, .btn-primary:focus, .btn-primary:hover {
-  background-color: #6293ff !important;
-  border-color: #6293ff !important;
+  background-color: #3071ff !important;
+  border-color: #3071ff !important;
   color: white;
 }
 
@@ -80,12 +80,12 @@ section h3.section-subheading {
 }
 
 ::-moz-selection {
-  background: #88adff;
+  background: #568bff;
   text-shadow: none;
 }
 
 ::selection {
-  background: #88adff;
+  background: #568bff;
   text-shadow: none;
 }
 
@@ -108,17 +108,17 @@ img::-moz-selection {
   text-transform: uppercase;
   color: white;
   border: 0;
-  background-color: #88adff;
+  background-color: #568bff;
   font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 #mainNav .navbar-brand {
-  color: #88adff;
+  color: #568bff;
   font-family: 'Kaushan Script', 'Helvetica Neue', Helvetica, Arial, cursive;
 }
 
 #mainNav .navbar-brand.active, #mainNav .navbar-brand:active, #mainNav .navbar-brand:focus, #mainNav .navbar-brand:hover {
-  color: #558aff;
+  color: #2368ff;
 }
 
 #mainNav .navbar-nav .nav-item .nav-link {
@@ -131,7 +131,7 @@ img::-moz-selection {
 }
 
 #mainNav .navbar-nav .nav-item .nav-link.active, #mainNav .navbar-nav .nav-item .nav-link:hover {
-  color: #88adff;
+  color: #568bff;
 }
 
 @media (min-width: 992px) {
@@ -183,7 +183,7 @@ header.masthead .intro-text {
 }
 
 header.masthead .intro-text .intro-lead-in {
-  font-size: 22px;
+  font-size: 38px;
   font-style: italic;
   line-height: 22px;
   margin-bottom: 100px;
@@ -204,7 +204,7 @@ header.masthead .intro-text .intro-heading {
     padding-bottom: 100px;
   }
   header.masthead .intro-text .intro-lead-in {
-    font-size: 40px;
+    font-size: 70px;
     font-style: italic;
     line-height: 40px;
     margin-bottom: 275px;
@@ -245,7 +245,7 @@ header.masthead .intro-text .intro-heading {
   -moz-transition: all ease 0.5s;
   transition: all ease 0.5s;
   opacity: 0;
-  background: rgba(136, 173, 255, 0.9);
+  background: rgba(86, 139, 255, 0.9);
 }
 
 #portfolio .portfolio-item .portfolio-link .portfolio-hover:hover {
@@ -449,7 +449,7 @@ header.masthead .intro-text .intro-heading {
   color: white;
   border: 7px solid #e9ecef;
   border-radius: 100%;
-  background-color: #88adff;
+  background-color: #568bff;
 }
 
 .timeline > li .timeline-image h4 {
@@ -616,11 +616,11 @@ section#contact .form-group input.form-control {
 }
 
 section#contact .form-group textarea.form-control {
-  height: 248px;
+  height: 158px;
 }
 
 section#contact .form-control:focus {
-  border-color: #88adff;
+  border-color: #568bff;
   box-shadow: none;
 }
 
@@ -690,5 +690,9 @@ ul.social-buttons li a {
 }
 
 ul.social-buttons li a:active, ul.social-buttons li a:focus, ul.social-buttons li a:hover {
-  background-color: #88adff;
+  background-color: #568bff;
+}
+
+section#specifications .spec-row {
+  margin-bottom: 50px;
 }
